@@ -1,0 +1,16 @@
+app_name: HelmyTask
+env: prod
+http_port: "8080"
+
+jwt_secret: "${JWT_SECRET}" # Read from environment variables in container.
+jwt_expires: "72h"
+
+db_driver: "mysql"  # Default to mysql for production (can be overridden)
+mysql_dsn: "${MYSQL_DSN}" # DSN from env; do not hardcode secrets in images.
+postgres_dsn: ""
+sqlite_path: "app.db"
+sqlserver_dsn: ""
+
+redis_addr: "${REDIS_ADDR}" # Use env variables for infra endpoints
+redis_db: 0
+redis_password: "${REDIS_PASSWORD}" # Env for Redis auth when needed.

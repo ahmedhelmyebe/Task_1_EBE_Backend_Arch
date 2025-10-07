@@ -1,0 +1,17 @@
+# //choose DB here. To switch DB, change db_driver + the corresponding DSN—no code changes.
+app_name: HelmyTask
+env: dev  # dev|staging|prod
+http_port: "8080"
+
+jwt_secret: "change-me-in-prod" #HS256 signing ; rotate and store sucurely in prod
+jwt_expires: "72h"
+
+db_driver: "mysql"   # mysql|postgres|sqlite|sqlserver
+mysql_dsn: "root:root@tcp(127.0.0.1:3306)/TestTaskOne?parseTime=true&loc=Local"
+postgres_dsn: ""
+sqlite_path: "app.db"
+sqlserver_dsn: ""
+
+redis_addr: "127.0.0.1:6379" # Redis location for caching/session/rate-limits.
+redis_db: 0  # DB index (0..n)
+redis_password: "" # Redis auth if configured.
