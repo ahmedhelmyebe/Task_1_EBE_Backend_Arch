@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<title>Tiny API Client (Single)</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<style>
+/* === style.css inline (trimmed only comments) === */
+:root{--bg:#0b0d12;--card:#141925;--muted:#92a0b3;--text:#e6eefc;--brand:#7aa2ff;--danger:#f47174;--border:#1f2432;--radius:14px}
+*{box-sizing:border-box}html,body{height:100%}
+body{margin:0;background:radial-gradient(1200px 800px at 70% -10%,#0f1530 0%,var(--bg)55%) fixed;color:var(--text);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+.container{max-width:1100px;margin:24px auto;padding:0 16px}
+.nav{display:flex;justify-content:space-between;align-items:center;padding:12px 16px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(11,13,18,.7);backdrop-filter:blur(8px);z-index:10}
+.nav__brand{font-weight:700;letter-spacing:.3px;color:var(--brand)}
+.nav__links a,.nav__links button{margin-left:10px}
+.nav__links a{color:var(--text);text-decoration:none;opacity:.9}.nav__links a:hover{opacity:1}
+.btn{background:var(--brand);color:#071221;border:0;padding:10px 14px;border-radius:10px;cursor:pointer;font-weight:600}
+.btn[disabled]{opacity:.6;cursor:not-allowed}.btn--ghost{background:transparent;color:var(--text);border:1px solid var(--border)}.btn--danger{background:var(--danger);color:#19070a}
+.card{background:linear-gradient(180deg,#121625,#0f1420);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 8px 24px rgba(0,0,0,.25)}
+.field{margin-bottom:12px}.field label{display:block;font-size:13px;color:var(--muted);margin-bottom:6px}
+input,select,textarea{width:100%;padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:#0e1320;color:var(--text)}
+.row{display:flex;gap:10px;flex-wrap:wrap}.muted{color:var(--muted);font-size:13px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.table-wrap{overflow:auto;max-height:360px}table{width:100%;border-collapse:collapse}
+thead th,tbody td{border-bottom:1px solid var(--border);text-align:left;padding:8px 6px;font-size:14px}
+.error{margin-top:10px;color:#ff9696;min-height:1em}
+.json{background:#0b1120;border:1px solid var(--border);border-radius:10px;padding:10px;max-height:240px;overflow:auto}
+.toast{position:fixed;right:16px;bottom:16px;background:#0e1424;color:var(--text);border:1px solid var(--border);padding:12px 16px;border-radius:12px;box-shadow:0 10px 28px rgba(0,0,0,.35);opacity:0;transform:translateY(12px);transition:all .25s ease}
+.toast--show{opacity:1;transform:translateY(0)}.toast--error{border-color:#ff6b6b}.toast--success{border-color:#66e191}
+</style>
+</head>
+<body>
+<nav class="nav">
+  <div class="nav__brand">Tiny API Client</div>
+  <div class="nav__links">
+    <a href="#/register" id="link-register">Register</a>
+    <a href="#/login" id="link-login">Login</a>
+    <a href="#/dashboard" id="link-dashboard">Dashboard</a>
+    <button id="btn-logout" class="btn btn--ghost" style="display:none">Logout</button>
+  </div>
+</nav>
+
+<main class="container">
+  <section id="view-register" data-route="#/register" hidden>
+    <h1>Register</h1>
+    <form id="form-register" class="card">
+      <div class="field"><label>Name</label><input name="name" type="text" required /></div>
+      <div class="field"><label>Email</label><input name="email" type="email" required /></div>
+      <div class="field"><label>Password</label><input name="password" type="password" minlength="6" required /></div>
+      <button class="btn" id="btn-register">Create account</button>
+      <p class="muted">Already have an account? <a href="#/login">Login</a></p>
+      <div class="error" id="err-register" role="alert"></div>
+    </form>
+  </section>
+
+  <section id="view-login" data-route="#/login" hidden>
+    <h1>Login</h1>
+    <form id="form-login" class="card">
+      <div class="field"><label>Email</label><input name="email" type="email" required /></div>
+      <div class="field"><label>Password</label><input name="password" type="password" required /></div>
+      <button class="btn" id="btn-login">Login</button>
+      <p class="muted">No account? <a href="#/register">Register</a></p>
+      <div class="error" id="err-login" role="alert"></div>
+    </form>
+  </section>
+
+  <section id="view-dashboard" data-route="#/dashboard" hidden>
+    <h1>Dashboard</h1>
+    <p class="muted">Adjust <code>RESOURCE</code> & <code>ITEM_FIELDS</code> inside this page (top of the JS).</p>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Create</h2>
+        <form id="form-create"></form>
+        <button class="btn" id="btn-create">Create</button>
+      </div>
+      <div class="card">
+        <h2>List</h2>
+        <div class="row"><button class="btn" id="btn-refresh">Refresh</button></div>
+        <div class="table-wrap">
+          <table id="table-list"><thead></thead><tbody></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <h2>Get by ID</h2>
+        <div class="row">
+          <input id="get-id" type="text" placeholder="id" />
+          <button class="btn" id="btn-get">Fetch</button>
+        </div>
+        <pre class="json" id="get-json" aria-live="polite"></pre>
+      </div>
+      <div class="card">
+        <h2>Update by ID</h2>
+        <div class="row"><input id="update-id" type="text" placeholder="id" /></div>
+        <form id="form-update"></form>
+        <button class="btn" id="btn-update">Update</button>
+      </div>
+      <div class="card">
+        <h2>Delete by ID</h2>
+        <div class="row">
+          <input id="delete-id" type="text" placeholder="id" />
+          <button class="btn btn--danger" id="btn-delete">Delete</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="error" id="err-dashboard" role="alert"></div>
+  </section>
+</main>
+
+<div id="toast" class="toast" aria-live="polite" hidden></div>
+
+<script>
+// ===== QUICK CONFIG (edit) =====
+const BASE_URL = "http://localhost:8080";
+const API_PREFIX = "/api/v1";
+const REGISTER_PATH = `${API_PREFIX}/auth/register`;
+const LOGIN_PATH    = `${API_PREFIX}/auth/login`;
+const TOKEN_RESPONSE_KEY = "token";
+const RESOURCE = "items";
+const RESOURCE_PATH = `${API_PREFIX}/${RESOURCE}`;
+const ITEM_FIELDS = ["title","description"];
+const ID_FIELD = "id";
+
+// ===== Helpers & State =====
+const qs=(s,r=document)=>r.querySelector(s), qsa=(s,r=document)=>Array.from(r.querySelectorAll(s));
+const state={ get token(){return localStorage.getItem("authToken")||""}, set token(v){ v?localStorage.setItem("authToken",v):localStorage.removeItem("authToken")} };
+function setAuthUI(){const a=!!state.token; qs("#btn-logout").style.display=a?"inline-block":"none"; qs("#link-dashboard").style.display=a?"inline-block":"none"; qs("#link-login").style.display=a?"none":"inline-block"; qs("#link-register").style.display=a?"none":"inline-block";}
+function renderToast(m,t="success",ttl=2400){const el=qs("#toast"); el.textContent=m; el.hidden=false; el.className=`toast toast--show toast--${t}`; clearTimeout(renderToast._t); renderToast._t=setTimeout(()=>{el.classList.remove("toast--show"); setTimeout(()=>el.hidden=true,250);},ttl);}
+async function apiFetch(path,{method="GET",body,auth=true}={}){const h={"Content-Type":"application/json"}; if(auth&&state.token) h.Authorization=`Bearer ${state.token}`; const r=await fetch(`${BASE_URL}${path}`,{method,headers:h,body:body?JSON.stringify(body):undefined}); const isJson=r.headers.get("content-type")?.includes("application/json"); const data=isJson?await r.json().catch(()=>({})):await r.text(); if(!r.ok){const msg=(isJson&&(data.error||data.message))||(typeof data==="string"?data:"Request failed"); const e=new Error(msg); e.status=r.status; e.payload=data; if(r.status===401){state.token=""; setAuthUI(); if(location.hash!=="#/login") location.hash="#/login";} throw e;} return data;}
+function requireAuth(){ if(!state.token){ location.hash="#/login"; throw new Error("Not authenticated"); } }
+function disableWhileLoading(el,fn){ return async (...a)=>{const prev=el.textContent; el.disabled=true; el.textContent="Working…"; try{return await fn(...a);} finally{el.disabled=false; el.textContent=prev;}} }
+function serializeForm(f){const o={}; qsa("input,select,textarea",f).forEach(i=>{if(!i.name)return; if(i.type==="number"&&i.value!=="") o[i.name]=Number(i.value); else if(i.type==="checkbox") o[i.name]=!!i.checked; else if(i.value!=="") o[i.name]=i.value;}); return o;}
+function buildFields(form,fields){form.innerHTML=""; fields.forEach(f=>{const w=document.createElement("div"); w.className="field"; w.innerHTML=`<label>${f}</label><input name="${f}" type="text" />`; form.appendChild(w);});}
+
+// ===== Router & Views =====
+function showRoute(hash){ qsa("section[data-route]").forEach(v=>v.hidden=true); const target=qs(`section[data-route="${hash}"]`); if(!target){ if(state.token) return showRoute("#/dashboard"); return showRoute("#/login"); } target.hidden=false; if(hash==="#/dashboard"){ try{ requireAuth(); renderDashboard(); }catch{} } if(hash==="#/login") qs("#err-login").textContent=""; if(hash==="#/register") qs("#err-register").textContent=""; }
+
+// ===== Auth =====
+async function handleRegister(ev){ ev.preventDefault(); const body=serializeForm(qs("#form-register")); const err=qs("#err-register"); err.textContent=""; try{ await apiFetch(`${REGISTER_PATH}`,{method:"POST",body,auth:false}); await handleLoginCore(body.email, body.password); renderToast("Registered & logged in","success"); location.hash="#/dashboard"; }catch(e){ err.textContent=e.message; renderToast(e.message,"error"); } }
+async function handleLogin(ev){ ev.preventDefault(); const body=serializeForm(qs("#form-login")); const err=qs("#err-login"); err.textContent=""; try{ await handleLoginCore(body.email, body.password); renderToast("Logged in","success"); location.hash="#/dashboard"; }catch(e){ err.textContent=e.message; renderToast(e.message,"error"); } }
+async function handleLoginCore(email,password){ const d=await apiFetch(`${LOGIN_PATH}`,{method:"POST",body:{email,password},auth:false}); const tok=d?.[TOKEN_RESPONSE_KEY]; if(!tok) throw new Error("Token missing in response"); state.token=tok; setAuthUI(); }
+
+// ===== Dashboard / CRUD =====
+async function renderDashboard(){ buildFields(qs("#form-create"),ITEM_FIELDS); buildFields(qs("#form-update"),ITEM_FIELDS); const th=qs("#table-list thead"); th.innerHTML=`<tr><th>${ID_FIELD}</th>${ITEM_FIELDS.map(f=>`<th>${f}</th>`).join("")}<th>created_at</th><th>updated_at</th></tr>`; await refreshList(); }
+async function refreshList(){ try{ const list=await apiFetch(`${RESOURCE_PATH}`,{method:"GET"}); const tbody=qs("#table-list tbody"); const rows=(Array.isArray(list)?list:list.items||[]).map(r=>{const id=r[ID_FIELD]??""; const cols=ITEM_FIELDS.map(f=>`<td>${sanitize(r[f])}</td>`).join(""); const ca=sanitize(r.created_at||""); const ua=sanitize(r.updated_at||""); return `<tr><td>${sanitize(id)}</td>${cols}<td>${ca}</td><td>${ua}</td></tr>`;}).join("")||`<tr><td colspan="${ITEM_FIELDS.length+3}"><em>No data</em></td></tr>`; tbody.innerHTML=rows; }catch(e){ renderToast(e.message,"error"); } }
+function sanitize(v){ if(v===null||v===undefined) return ""; return String(v).replace(/[&<>"']/g,s=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[s])); }
+async function onCreate(){ requireAuth(); const body=serializeForm(qs("#form-create")); const d=await apiFetch(`${RESOURCE_PATH}`,{method:"POST",body}); renderToast(`${RESOURCE} created (id=${d?.[ID_FIELD]??"?"})`,"success"); await refreshList(); }
+async function onGetById(){ requireAuth(); const id=qs("#get-id").value.trim(); if(!id) return renderToast("Provide an id","error"); const d=await apiFetch(`${RESOURCE_PATH}/${encodeURIComponent(id)}`,{method:"GET"}); qs("#get-json").textContent=JSON.stringify(d,null,2); renderToast(`Fetched ${RESOURCE} ${id}`,"success"); }
+async function onUpdate(){ requireAuth(); const id=qs("#update-id").value.trim(); if(!id) return renderToast("Provide an id","error"); const body=serializeForm(qs("#form-update")); await apiFetch(`${RESOURCE_PATH}/${encodeURIComponent(id)}`,{method:"PUT",body}); renderToast(`Updated ${RESOURCE} ${id}`,"success"); await refreshList(); }
+async function onDelete(){ requireAuth(); const id=qs("#delete-id").value.trim(); if(!id) return renderToast("Provide an id","error"); await apiFetch(`${RESOURCE_PATH}/${encodeURIComponent(id)}`,{method:"DELETE"}); renderToast(`Deleted ${RESOURCE} ${id}`,"success"); await refreshList(); }
+
+// ===== Wireup =====
+window.addEventListener("DOMContentLoaded",()=>{ setAuthUI();
+  qs("#btn-logout").addEventListener("click",()=>{state.token=""; setAuthUI(); location.hash="#/login";});
+  qs("#form-register").addEventListener("submit", disableWhileLoading(qs("#btn-register"), handleRegister));
+  qs("#form-login").addEventListener("submit", disableWhileLoading(qs("#btn-login"), handleLogin));
+  qs("#btn-create").addEventListener("click", disableWhileLoading(qs("#btn-create"), onCreate));
+  qs("#btn-refresh").addEventListener("click", disableWhileLoading(qs("#btn-refresh"), refreshList));
+  qs("#btn-get").addEventListener("click", disableWhileLoading(qs("#btn-get"), onGetById));
+  qs("#btn-update").addEventListener("click", disableWhileLoading(qs("#btn-update"), onUpdate));
+  qs("#btn-delete").addEventListener("click", disableWhileLoading(qs("#btn-delete"), onDelete));
+  window.addEventListener("hashchange",()=>showRoute(location.hash));
+  if(!location.hash) location.hash = state.token ? "#/dashboard" : "#/login";
+  showRoute(location.hash);
+});
+function disableWhileLoading(el,fn){return async (...a)=>{const p=el.textContent; el.disabled=true; el.textContent="Working…"; try{return await fn(...a);} finally{el.disabled=false; el.textContent=p;}}}
+</script>
+</body>
+</html>

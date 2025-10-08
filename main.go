@@ -11,6 +11,7 @@ import (
 	"HelmyTask/utils/redislog"
 
 	"github.com/gin-gonic/gin"
+	"github.com/gin-contrib/cors"
 )
 
 func main() {
@@ -37,7 +38,16 @@ func main() {
 	userSvc := services.NewUserService(userRepo, rdb, rlog)  // Service wraps business rules and JWT issuance.
 
 	// 5) Create Gin engine and wire routes
-	r := gin.New()                                  // Create a new bare Gin engine (no default middleware).
+	r := gin.New()     // Create a new bare Gin engine (no default middleware).
+r.Use(cors.New(cors.Config{
+	///////////////////////////////////////////////////////////////////////////////////                             
+    AllowOrigins:     []string{"http://localhost:8081", "http://127.0.0.1:8081"},
+    AllowMethods:     []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+    AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+    ExposeHeaders:    []string{"Content-Length"},
+    AllowCredentials: false,
+    MaxAge:           12 * time.Hour,
+}))
 
 
 	// trust none (safe default)
@@ -48,12 +58,12 @@ _ = r.SetTrustedProxies(nil)
 	routes.Setup(r, userSvc, cfg.JWTSecret, jwtExp) // Attach middlewares and endpoints.
 
 
-	rlog.Info("http server start", map[string]string{"port": cfg.HTTPPort})
-	if err := r.Run(":" + cfg.HTTPPort); err != nil {
-		rlog.Error("http server error", map[string]string{"err": err.Error()})
-	}
-	// 6) Start HTTP server on configured port; fatal if it fails to bind.
-	if err := r.Run(":" + cfg.HTTPPort); err != nil {
-		log.Fatal(err) // Stop the process if server fails to start.
-	}
+rlog.Info("http server start", map[string]string{"port": cfg.HTTPPort})
+if err := r.Run(":" + cfg.HTTPPort); err != nil {
+    rlog.Error("http server error", map[string]string{"err": err.Error()})
+    log.Fatal(err)
+}
+
+
+
 }

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <title>Tiny API Client</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="./style.css" />
+</head>
+<body>
+  <nav class="nav">
+    <div class="nav__brand">Tiny API Client</div>
+    <div class="nav__links">
+      <a href="#/register" id="link-register">Register</a>
+      <a href="#/login" id="link-login">Login</a>
+      <a href="#/dashboard" id="link-dashboard">Dashboard</a>
+      <button id="btn-logout" class="btn btn--ghost" style="display:none">Logout</button>
+    </div>
+  </nav>
+
+  <main class="container">
+    <!-- REGISTER -->
+    <section id="view-register" data-route="#/register" hidden>
+      <h1>Register</h1>
+      <form id="form-register" class="card">
+        <div class="field">
+          <label>Name</label>
+          <input name="name" type="text" required />
+        </div>
+        <div class="field">
+          <label>Email</label>
+          <input name="email" type="email" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input name="password" type="password" minlength="6" required />
+        </div>
+        <button class="btn" id="btn-register">Create account</button>
+        <p class="muted">Already have an account? <a href="#/login">Login</a></p>
+        <div class="error" id="err-register" role="alert"></div>
+      </form>
+    </section>
+
+    <!-- LOGIN -->
+    <section id="view-login" data-route="#/login" hidden>
+      <h1>Login</h1>
+      <form id="form-login" class="card">
+        <div class="field">
+          <label>Email</label>
+          <input name="email" type="email" required />
+        </div>
+        <div class="field">
+          <label>Password</label>
+          <input name="password" type="password" required />
+        </div>
+        <button class="btn" id="btn-login">Login</button>
+        <p class="muted">No account? <a href="#/register">Register</a></p>
+        <div class="error" id="err-login" role="alert"></div>
+      </form>
+    </section>
+
+    <!-- DASHBOARD -->
+    <section id="view-dashboard" data-route="#/dashboard" hidden>
+      <h1>Dashboard</h1>
+      <p class="muted">Authenticated mini-console. Adjust fields in <code>app.js</code> → <strong>RESOURCE</strong> and <strong>ITEM_FIELDS</strong>.</p>
+
+      <div class="grid">
+        <!-- CREATE -->
+        <div class="card">
+          <h2>Create</h2>
+          <form id="form-create"></form>
+          <button class="btn" id="btn-create">Create</button>
+        </div>
+
+        <!-- LIST -->
+        <div class="card">
+          <h2>List</h2>
+          <div class="row">
+            <button class="btn" id="btn-refresh">Refresh</button>
+          </div>
+          <div class="table-wrap">
+            <table id="table-list">
+              <thead></thead>
+              <tbody></tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- GET BY ID -->
+        <div class="card">
+          <h2>Get by ID</h2>
+          <div class="row">
+            <input id="get-id" type="text" placeholder="id" />
+            <button class="btn" id="btn-get">Fetch</button>
+          </div>
+          <pre class="json" id="get-json" aria-live="polite"></pre>
+        </div>
+
+        <!-- UPDATE -->
+        <div class="card">
+          <h2>Update by ID</h2>
+          <div class="row">
+            <input id="update-id" type="text" placeholder="id" />
+          </div>
+          <form id="form-update"></form>
+          <button class="btn" id="btn-update">Update</button>
+        </div>
+
+        <!-- DELETE -->
+        <div class="card">
+          <h2>Delete by ID</h2>
+          <div class="row">
+            <input id="delete-id" type="text" placeholder="id" />
+            <button class="btn btn--danger" id="btn-delete">Delete</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="error" id="err-dashboard" role="alert"></div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast" aria-live="polite" hidden></div>
+  <script src="./app.js"></script>
+</body>
+</html>
